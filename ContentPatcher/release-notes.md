@@ -1,6 +1,37 @@
 [← back to readme](README.md)
 
 # Release notes
+## 1.14.1
+Released 14 May 2020.
+
+* Fixed patches not updating correctly in 1.14 when a changed token is only in their `FromFile` field.
+
+## 1.14
+Released 02 May 2020.
+
+* Added `Round` token.
+* Added `FromFile` patch token (e.g. so you can do `"HasFile:{{FromFile}}": true`).
+* The `patch export` command can now export assets that haven't been loaded yet.
+* Fixed `Range` token excluding its upper bound.
+* Fixed validation for `Target` fields containing `{{Target}}` and `{{TargetWithoutPath}}` tokens.
+* Fixed validation for `Target` fields not shown in `patch summary` in some cases.
+* Fixed 'file does not exist' error when the `FromFile` path is ready and doesn't exist, but the patch is disabled by a patch-specific condition.
+* Fixed error when removing a map tile without edits.
+* Fixed token handling in map tile/property fields.
+* Fixed format validation for 1.13 features not applied.
+
+## 1.13
+Released 09 March 2020.
+
+* Added support for arithmetic expressions.
+* Added support for editing map tiles.
+* Added support for editing map tile properties.
+* Added support for multi-key bindings (like `LeftShift + F3`).
+* `EditMap` patches now also copy layers and layer properties from the source map (thanks to mouse!).
+* Patches are now applied in the order listed more consistently.
+* Improved logic for matching tilesheets when applying a map patch.
+* Fixed incorrect warning when using `HasWalletItem` token in 1.12.
+
 ## 1.12
 Released 01 February 2020.
 

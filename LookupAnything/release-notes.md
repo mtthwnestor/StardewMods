@@ -1,6 +1,43 @@
 [← back to readme](README.md)
 
 # Release notes
+## 1.27.1
+Released 02 May 2020.
+
+* Fixed compatibility issue with Mega Storage in 1.27.
+
+## 1.27
+Released 02 May 2020.
+
+* The lookup menu is now centered again. (It will fallback to non-centered mode only if needed for compatibility.)
+* Improved compatibility with custom NPC mods (including mods which replace non-social NPCs with social ones).
+* Improved item scanning (used for 'number owned' and gift taste fields):
+  * now includes nested items (e.g. chests in chests in chests);
+  * now includes tool attachments;
+  * now searches within some mod containers (e.g. bags);
+  * fixed some spawned items incorrectly counted as owned (e.g. weeds and stones).
+* Improved debug field formatting for `npc.currentMarriageDialogue`.
+* Fixed 'number crafted' including some incorrect recipes.
+* Fixed placed and held torches counted as different items.
+* Fixed cursor incorrectly detected on Android in some cases.
+* Fixed rare 'scissor rectangle is invalid' error with search menu.
+* Fixed issue where closing the search menu with the default key bindings could trigger a lookup after the menu closes.
+* Improved translations. Thanks to Andites (updated Russian) and niniack (updated Chinese)!
+
+## 1.26
+Released 09 March 2020.
+
+* Added search feature (thanks to collaboration with mattfeldman!).
+* Added support for multi-key bindings (like `LeftShift + F1`).
+* Added contextual lookups for better controller/mobile support:
+  * When there's no cursor (e.g. when playing with a controller or mobile), Lookup Anything automatically finds the most relevant match instead of looking under the cursor. For example, that may be what's in front of the player, the item picked up in a menu, etc.
+  * Added item lookup when holding an item in a chest/inventory menu.
+  * Added NPC lookup from their profile page (when the cursor isn't over an item).
+  * Added player lookup from the skills tab.
+  * Removed `ToggleLookupInFrontOfPlayer` option in `config.json`. If you edited it, your value will be merged into `ToggleLookup` automatically next time you launch the game.
+* Fixed some vanilla recipes not shown in lookups when Producer Framework Mod packs are installed.
+* Improved translations. Thanks to Jeardius (updated German), Hesper (updated Korean), and mael-belval (updated French)!
+
 ## 1.25.2
 Released 03 February 2020.
 

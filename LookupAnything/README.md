@@ -1,4 +1,4 @@
-**Lookup Anything** is a [Stardew Valley](http://stardewvalley.net/) mod that shows live info about
+**Lookup Anything** is a [Stardew Valley](https://stardewvalley.net/) mod that shows live info about
 whatever's under your cursor when you press `F1`. Learn a villager's favorite gifts, when a crop
 will be ready to harvest, how long a fence will last, why your farm animals are unhappy, and more.
 
@@ -13,16 +13,23 @@ what the game is doing.
 * [Configure](#configure)
 * [Showcase](#showcase)
 * [Compatibility](#compatibility)
+* [Extensibility for modders](#extensibility-for-modders)
 * [See also](#see-also)
 
 ## Install
 1. [Install the latest version of SMAPI](https://smapi.io/).
-2. [Install this mod from Nexus mods](http://www.nexusmods.com/stardewvalley/mods/541/).
+2. [Install this mod from Nexus mods](https://www.nexusmods.com/stardewvalley/mods/541/).
 3. Run the game using SMAPI.
 
 ## Use
 Just point your cursor at something and press `F1`. The mod will show live info about that object.
-You can do this in the world, your inventory, the calendar, or a shop.
+You can do this in the world, your inventory, the calendar, a shop, the social menu, and more.
+
+If there's no cursor (e.g. when playing with a controller or on mobile), the most relevant subject
+is shown instead. That may be something in front of the player, the player on the skills menu, the
+NPC on their profile page, etc.
+
+You can also press `left shift` + `F1` to search for something by name.
 
 ## Configure
 The mod creates a `config.json` file in its mod folder the first time you run it. You can open that
@@ -30,12 +37,63 @@ file in a text editor to configure the mod.
 
 Common settings:
 
-setting           | what it affects
------------------ | -------------------
-`Controls`    | The configured controller, keyboard, and mouse buttons (see [key bindings](https://stardewvalleywiki.com/Modding:Key_bindings)). You can separate multiple buttons with commas. The default keyboard bindings are `F1` to lookup, and `Up`/`Down` to scroll the lookup results. Available inputs:<ul><li>`ToggleLookup`: lookup whatever's under the cursor.</li><li>`ToggleLookupInFrontOfPlayer`: lookup whatever's in front of the player.</li><li>`ScrollUp`/`ScrollDown`: scroll the displayed lookup results.</li><li>`ToggleDebug`: show information intended for developers.</li></ul>
-`ProgressionMode` | Default `false`. Whether to hide some content (current gift tastes) until you've discovered it in-game.
-`HighlightUnrevealedGiftTastes` | Default `false`. Whether to highlight item gift tastes which haven't been revealed in the NPC profile. When enabled, unrevealed gift tastes will be bold and lookups will also show disliked/hated gifts.
-`HideOnKeyUp` | Default `false`. If enabled, the lookup window will be shown while you hold `F1` and disappear when you release it.
+<table>
+<tr>
+  <th>setting</th>
+  <th>what it affects</th>
+</tr>
+
+<tr>
+  <td><code>Controls</code></td>
+  <td>
+
+The configured controller, keyboard, and mouse buttons (see [key bindings](https://stardewvalleywiki.com/Modding:Key_bindings)).
+You can separate multiple buttons with commas. The default bindings are...
+
+field | action | default
+----- | ------ | -------
+`ToggleLookup` | Look up a subject (see _use_ section). | `F1`
+`ToggleSearch` | Show a search UI to find something by name. | `LeftShift + F1`
+`ScrollUp`, `ScrollDown` | Scroll the displayed lookup results. | `Up`, `Down`
+`ToggleDebug` | Show information intended for developers. | _none_
+
+You can separate bindings with commas (like `F1, LeftShoulder` for either one), and set
+multi-key bindings with plus signs (like `LeftShift + F1`).
+
+  </td>
+</tr>
+
+<tr>
+  <td><code>ProgressionMode</code></td>
+  <td>
+
+Default `false`. Whether to hide some content (current gift tastes) until you've discovered it
+in-game.
+
+  </td>
+</tr>
+
+<tr>
+  <td><code>HighlightUnrevealedGiftTastes</code></td>
+  <td>
+
+Default `false`. Whether to highlight item gift tastes which haven't been revealed in the NPC
+profile. When enabled, unrevealed gift tastes will be bold and lookups will also show
+disliked/hated gifts.
+
+  </td>
+</tr>
+
+<tr>
+  <td><code>HideOnKeyUp</code></td>
+  <td>
+
+Default `false`. If enabled, the lookup window will be shown while you hold `F1` and disappear when
+you release it.
+
+  </td>
+</tr>
+</table>
 
 Advanced settings:
 
@@ -51,7 +109,6 @@ The optional 'progression mode' hides spoilers until you've discovered them in-g
 default](#Configure)). This currently affects gift tastes. Hidden content is indicated by
 grayed-out text like this:
 > ![](screenshots/progression-mode.png)
-
 
 The screenshots below are without progression mode, and may show spoilers.
 
@@ -72,7 +129,7 @@ The screenshots below are without progression mode, and may show spoilers.
 
 * See a monster's stats, your progress towards the Adventurer's Guild eradication goals, and what
   items the monster will drop when killed. The drop list will highlight which items will definitely
-  drop (black), and which might drop because you have the [Burglar's Ring](http://stardewvalleywiki.com/Burglar%27s_Ring)
+  drop (black), and which might drop because you have the [Burglar's Ring](https://stardewvalleywiki.com/Burglar%27s_Ring)
   (gray but not crossed out).
   > ![](screenshots/monster.png)
 
@@ -138,16 +195,33 @@ Enable tile lookups to see information about map tiles:
 Lookup Anything is compatible with Stardew Valley 1.4+ on Linux/Mac/Windows, both single-player and
 multiplayer. There are no known issues in multiplayer (even if other players don't have it installed).
 
+## Extensibility for modders
+### Nested items
+Lookup Anything scans the world to detect items for the 'number owned' and gift taste fields. It
+scans inside standard items recursively; for example, if you have an `Object` with the `heldObject`
+field set to a chest, Lookup Anything will look inside the chest too.
+
+If you have a custom non-`Object` item (e.g. a tool) which contains items, you can add a custom
+`heldObject` field or property with any `Item` type. For example:
+
+```c#
+// store one item
+public Object heldObject;
+
+// store many items
+public Chest heldObject = new Chest();
+```
+
+Lookup Anything will detect the field and search inside it too.
+
+### Hovered items in custom menus
+Lookup Anything detects when the cursor is over an item in standard menus. For custom menus, create
+a `HoveredItem` field with any `Item` type and Lookup Menu will detect it:
+
+```c#
+public Object HoveredItem;
+```
+
 ## See also
 * [Release notes](release-notes.md)
-* [Nexus mod](http://www.nexusmods.com/stardewvalley/mods/518)
-* [Discussion thread](http://community.playstarbound.com/threads/smapi-lookup-anything.122929/)
-* Useful tools when working on this mod:
-  * Windows:
-    * [dotPeek](https://www.jetbrains.com/decompiler/) to decompile the game into a Visual Studio
-  project.
-    * [ReSharper](https://www.jetbrains.com/resharper/) to analyze the game code (e.g. find usages).
-    * [XNB Extract](http://community.playstarbound.com/threads/modding-guides-and-general-modding-discussion-redux.109131/)
-  to extract the game's assets and data.
-  * [YAML Analyzer](http://catox.free.fr/StardewTools/yaml_analyzer.html) to help figure out data
-  files.
+* [Nexus mod](https://www.nexusmods.com/stardewvalley/mods/518)

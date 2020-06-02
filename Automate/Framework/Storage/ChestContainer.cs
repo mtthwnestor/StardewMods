@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.Xna.Framework;
+using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Objects;
 using SObject = StardewValley.Object;
@@ -18,6 +19,9 @@ namespace Pathoschild.Stardew.Automate.Framework.Storage
         *********/
         /// <summary>The underlying chest.</summary>
         private readonly Chest Chest;
+
+        /// <summary>Get the number of items that can be stored in the chest.</summary>
+        private readonly Func<int> Capacity;
 
 
         /*********
@@ -44,13 +48,21 @@ namespace Pathoschild.Stardew.Automate.Framework.Storage
         /// <param name="chest">The underlying chest.</param>
         /// <param name="location">The location which contains the container.</param>
         /// <param name="tile">The tile area covered by the container.</param>
-        public ChestContainer(Chest chest, GameLocation location, Vector2 tile)
+        /// <param name="reflection">An API for accessing inaccessible code.</param>
+        public ChestContainer(Chest chest, GameLocation location, Vector2 tile, IReflectionHelper reflection)
         {
+            // save metadata
             this.Chest = chest;
             this.Location = location;
             this.TileArea = new Rectangle((int)tile.X, (int)tile.Y, 1, 1);
-
             this.Name = this.MigrateLegacyOptions(this.Name);
+
+            // get capacity
+            IReflectedProperty<int> capacity = reflection.GetProperty<int>(chest, "Capacity", required: false); // let mods like MegaStorage override capacity
+            if (capacity != null)
+                this.Capacity = capacity.GetValue;
+            else
+                this.Capacity = () => Chest.capacity;
         }
 
         /// <summary>Store an item stack.</summary>
@@ -78,18 +90,18 @@ namespace Pathoschild.Stardew.Automate.Framework.Storage
             }
 
             // try add to empty slot
-            for (int i = 0; i < Chest.capacity && i < inventory.Count; i++)
+            int capacity = this.Capacity();
+            for (int i = 0; i < capacity && i < inventory.Count; i++)
             {
                 if (inventory[i] == null)
                 {
                     inventory[i] = stack.Take(stack.Count);
                     return;
                 }
-
             }
 
             // try add new slot
-            if (inventory.Count < Chest.capacity)
+            if (inventory.Count < capacity)
                 inventory.Add(stack.Take(stack.Count));
         }
 
@@ -111,26 +123,9 @@ namespace Pathoschild.Stardew.Automate.Framework.Storage
         {
             foreach (Item item in this.Chest.items.ToArray())
             {
-                if (item != null)
-                {
-                    ITrackedStack stack = null;
-                    try
-                    {
-                        stack = this.GetTrackedItem(item);
-                    }
-                    catch (Exception ex)
-                    {
-                        string error = $"Failed to retrieve item #{item.ParentSheetIndex} ('{item.Name}'";
-                        if (item is SObject obj && obj.preservedParentSheetIndex.Value >= 0)
-                            error += $", preserved item #{obj.preservedParentSheetIndex.Value}";
-                        error += $") from container '{this.Chest.Name}' at {this.Location.Name} (tile: {this.TileArea.X}, {this.TileArea.Y}).";
-
-                        throw new InvalidOperationException(error, ex);
-                    }
-
-                    if (stack != null)
-                        yield return stack;
-                }
+                ITrackedStack stack = this.GetTrackedItem(item);
+                if (stack != null)
+                    yield return stack;
             }
         }
 
@@ -156,8 +151,12 @@ namespace Pathoschild.Stardew.Automate.Framework.Storage
             {
                 if (item != null && predicate(item))
                 {
+                    ITrackedStack stack = this.GetTrackedItem(item);
+                    if (stack == null)
+                        continue;
+
                     countFound += item.Stack;
-                    yield return this.GetTrackedItem(item);
+                    yield return stack;
                     if (countFound >= count)
                         yield break;
                 }
@@ -168,7 +167,26 @@ namespace Pathoschild.Stardew.Automate.Framework.Storage
         /// <param name="item">The item to track.</param>
         private ITrackedStack GetTrackedItem(Item item)
         {
-            return new TrackedItem(item, onEmpty: i => this.Chest.items.Remove(i));
+            if (item == null)
+                return null;
+
+            try
+            {
+                return new TrackedItem(item, onEmpty: i => this.Chest.items.Remove(i));
+            }
+            catch (KeyNotFoundException)
+            {
+                return null; // invalid/broken item, silently ignore it
+            }
+            catch (Exception ex)
+            {
+                string error = $"Failed to retrieve item #{item.ParentSheetIndex} ('{item.Name}'";
+                if (item is SObject obj && obj.preservedParentSheetIndex.Value >= 0)
+                    error += $", preserved item #{obj.preservedParentSheetIndex.Value}";
+                error += $") from container '{this.Chest.Name}' at {this.Location.Name} (tile: {this.TileArea.X}, {this.TileArea.Y}).";
+
+                throw new InvalidOperationException(error, ex);
+            }
         }
 
         /// <summary>Migrate legacy options stored in a chest name.</summary>

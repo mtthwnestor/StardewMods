@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Pathoschild.Stardew.Common;
 using Pathoschild.Stardew.Common.DataParsers;
+using Pathoschild.Stardew.Common.Items.ItemData;
 using Pathoschild.Stardew.LookupAnything.Framework.Constants;
 using Pathoschild.Stardew.LookupAnything.Framework.Data;
 using Pathoschild.Stardew.LookupAnything.Framework.DebugFields;
@@ -87,6 +88,7 @@ namespace Pathoschild.Stardew.LookupAnything.Framework.Subjects
         {
             // get data
             Item item = this.Target;
+            ItemType itemType = item.GetItemType();
             SObject obj = item as SObject;
             bool isCrop = this.FromCrop != null;
             bool isSeed = this.SeedForCrop != null;
@@ -177,7 +179,7 @@ namespace Pathoschild.Stardew.LookupAnything.Framework.Subjects
             }
 
             // recipes
-            switch (item.GetItemType())
+            switch (itemType)
             {
                 // for ingredient
                 case ItemType.Object:
@@ -275,7 +277,7 @@ namespace Pathoschild.Stardew.LookupAnything.Framework.Subjects
                 // times crafted
                 RecipeModel[] recipes = this.GameHelper
                     .GetRecipes()
-                    .Where(recipe => recipe.OutputItemIndex == this.Target.ParentSheetIndex)
+                    .Where(recipe => recipe.OutputItemIndex == this.Target.ParentSheetIndex && recipe.OutputItemType == this.Target.GetItemType())
                     .ToArray();
                 if (recipes.Any())
                 {

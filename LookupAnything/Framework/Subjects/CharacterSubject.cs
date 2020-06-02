@@ -27,7 +27,7 @@ namespace Pathoschild.Stardew.LookupAnything.Framework.Subjects
         ** Fields
         *********/
         /// <summary>The NPC type.s</summary>
-        private readonly TargetType TargetType;
+        private readonly SubjectType TargetType;
 
         /// <summary>The lookup target.</summary>
         private readonly NPC Target;
@@ -59,7 +59,7 @@ namespace Pathoschild.Stardew.LookupAnything.Framework.Subjects
         /// <param name="progressionMode">Whether to only show content once the player discovers it.</param>
         /// <param name="highlightUnrevealedGiftTastes">Whether to highlight item gift tastes which haven't been revealed in the NPC profile.</param>
         /// <remarks>Reverse engineered from <see cref="NPC"/>.</remarks>
-        public CharacterSubject(SubjectFactory codex, GameHelper gameHelper, NPC npc, TargetType type, Metadata metadata, ITranslationHelper translations, IReflectionHelper reflectionHelper, bool progressionMode, bool highlightUnrevealedGiftTastes)
+        public CharacterSubject(SubjectFactory codex, GameHelper gameHelper, NPC npc, SubjectType type, Metadata metadata, ITranslationHelper translations, IReflectionHelper reflectionHelper, bool progressionMode, bool highlightUnrevealedGiftTastes)
             : base(codex, gameHelper, translations)
         {
             this.Reflection = reflectionHelper;
@@ -84,7 +84,7 @@ namespace Pathoschild.Stardew.LookupAnything.Framework.Subjects
             NPC npc = this.Target;
             switch (this.TargetType)
             {
-                case TargetType.Villager:
+                case SubjectType.Villager:
                     if (npc is Child child)
                         return this.GetDataForChild(child);
                     else if (npc is TrashBear trashBear)
@@ -92,10 +92,10 @@ namespace Pathoschild.Stardew.LookupAnything.Framework.Subjects
                     else
                         return this.GetDataForVillager(npc);
 
-                case TargetType.Pet:
+                case SubjectType.Pet:
                     return this.GetDataForPet((Pet)npc);
 
-                case TargetType.Monster:
+                case SubjectType.Monster:
                     return this.GetDataForMonster((Monster)npc);
 
                 default:
@@ -168,7 +168,7 @@ namespace Pathoschild.Stardew.LookupAnything.Framework.Subjects
         {
             // birthday
             SDate birthday = SDate.Now().AddDays(-child.daysOld.Value);
-            yield return new GenericField(this.GameHelper, L10n.Npc.Birthday(), this.Text.Stringify(birthday, withYear: true));
+            yield return new GenericField(this.GameHelper, L10n.Npc.Birthday(), birthday.ToLocaleString(withYear: true));
 
             // age
             {
@@ -276,7 +276,8 @@ namespace Pathoschild.Stardew.LookupAnything.Framework.Subjects
         /// <param name="npc">The NPC for which to show info.</param>
         private IEnumerable<ICustomField> GetDataForVillager(NPC npc)
         {
-            if (!this.Constants.AsocialVillagers.Contains(npc.Name))
+            // social fields (birthday, friendship, gifting, etc)
+            if (this.GameHelper.IsSocialVillager(npc))
             {
                 // birthday
                 if (npc.Birthday_Season != null)
@@ -336,17 +337,17 @@ namespace Pathoschild.Stardew.LookupAnything.Framework.Subjects
         /// <summary>Get the display type for a character.</summary>
         /// <param name="npc">The lookup target.</param>
         /// <param name="type">The NPC type.</param>
-        private static string GetTypeName(Character npc, TargetType type)
+        private static string GetTypeName(Character npc, SubjectType type)
         {
             switch (type)
             {
-                case TargetType.Villager:
+                case SubjectType.Villager:
                     return L10n.Types.Villager();
 
-                case TargetType.Monster:
+                case SubjectType.Monster:
                     return L10n.Types.Monster();
 
-                case TargetType.Pet:
+                case SubjectType.Pet:
                     {
                         string typeName = Game1.content.LoadString($"Strings\\StringsFromCSFiles:Event.cs.{(npc is Cat ? "1242" : "1243")}");
                         if (typeName?.Length > 1)
