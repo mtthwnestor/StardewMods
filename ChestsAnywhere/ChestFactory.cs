@@ -27,6 +27,9 @@ namespace Pathoschild.Stardew.ChestsAnywhere
         /// <summary>An API for reading and storing local mod data.</summary>
         private readonly IDataHelper DataHelper;
 
+        /// <summary>Provides multiplayer utilities.</summary>
+        private readonly IMultiplayerHelper Multiplayer;
+
         /// <summary>Simplifies access to private code.</summary>
         private readonly IReflectionHelper Reflection;
 
@@ -42,12 +45,14 @@ namespace Pathoschild.Stardew.ChestsAnywhere
         *********/
         /// <summary>Construct an instance.</summary>
         /// <param name="dataHelper">An API for reading and storing local mod data.</param>
+        /// <param name="multiplayer">Provides multiplayer utilities.</param>
         /// <param name="reflection">Simplifies access to private code.</param>
         /// <param name="translations">Provides translations stored in the mod's folder.</param>
         /// <param name="enableShippingBin">Whether to support access to the shipping bin.</param>
-        public ChestFactory(IDataHelper dataHelper, IReflectionHelper reflection, ITranslationHelper translations, bool enableShippingBin)
+        public ChestFactory(IDataHelper dataHelper, IMultiplayerHelper multiplayer, IReflectionHelper reflection, ITranslationHelper translations, bool enableShippingBin)
         {
             this.DataHelper = dataHelper;
+            this.Multiplayer = multiplayer;
             this.Reflection = reflection;
             this.Translations = translations;
             this.EnableShippingBin = enableShippingBin;
@@ -99,7 +104,7 @@ namespace Pathoschild.Stardew.ChestsAnywhere
                             if (obj is Chest chest && chest.playerChest.Value)
                             {
                                 yield return new ManagedChest(
-                                    container: new ChestContainer(chest, context: chest, this.Reflection),
+                                    container: new ChestContainer(chest, context: chest, showColorPicker: this.CanShowColorPicker(chest, location), this.Reflection),
                                     location: location,
                                     tile: tile,
                                     defaultDisplayName: this.Translations.Get("default-name.chest", new { number = ++namelessChests }),
@@ -111,7 +116,7 @@ namespace Pathoschild.Stardew.ChestsAnywhere
                             else if (obj.ParentSheetIndex == this.AutoGrabberID && obj.heldObject.Value is Chest grabberChest)
                             {
                                 yield return new ManagedChest(
-                                    container: new AutoGrabberContainer(obj, grabberChest, context: obj, this.Reflection), 
+                                    container: new AutoGrabberContainer(obj, grabberChest, context: obj, this.Reflection),
                                     location: location,
                                     tile: tile,
                                     defaultDisplayName: this.Translations.Get("default-name.auto-grabber", new { number = ++namelessGrabbers }),
@@ -128,7 +133,7 @@ namespace Pathoschild.Stardew.ChestsAnywhere
                         if (fridge != null)
                         {
                             yield return new ManagedChest(
-                                container: new ChestContainer(fridge, context: fridge, this.Reflection),
+                                container: new ChestContainer(fridge, context: fridge, showColorPicker: false, this.Reflection),
                                 location: location,
                                 tile: Vector2.Zero,
                                 defaultDisplayName: this.Translations.Get("default-name.fridge"),
@@ -177,13 +182,33 @@ namespace Pathoschild.Stardew.ChestsAnywhere
                     // shipping bin
                     if (this.EnableShippingBin && location is Farm farm && object.ReferenceEquals(farm, Game1.getFarm()))
                     {
-                        yield return new ManagedChest(
-                            container: new ShippingBinContainer(farm, this.DataHelper),
-                            location: farm,
-                            tile: Vector2.Zero,
-                            defaultDisplayName: this.Translations.Get("default-name.shipping-bin"),
-                            defaultCategory: category
-                        );
+                        if (Constants.TargetPlatform == GamePlatform.Android)
+                        {
+                            yield return new ManagedChest(
+                                container: new ShippingBinContainer(farm, this.DataHelper, ShippingBinMode.MobileStore),
+                                location: farm,
+                                tile: Vector2.Zero,
+                                defaultDisplayName: this.Translations.Get("default-name.shipping-bin.store"),
+                                defaultCategory: category
+                            );
+                            yield return new ManagedChest(
+                                container: new ShippingBinContainer(farm, this.DataHelper, ShippingBinMode.MobileTake),
+                                location: farm,
+                                tile: Vector2.Zero,
+                                defaultDisplayName: this.Translations.Get("default-name.shipping-bin.take"),
+                                defaultCategory: category
+                            );
+                        }
+                        else
+                        {
+                            yield return new ManagedChest(
+                                container: new ShippingBinContainer(farm, this.DataHelper, ShippingBinMode.Normal),
+                                location: farm,
+                                tile: Vector2.Zero,
+                                defaultDisplayName: this.Translations.Get("default-name.shipping-bin"),
+                                defaultCategory: category
+                            );
+                        }
                     }
                 }
             }
@@ -245,13 +270,9 @@ namespace Pathoschild.Stardew.ChestsAnywhere
         /// <summary>Get the locations which are accessible to the current player (regardless of settings).</summary>
         private IEnumerable<GameLocation> GetAccessibleLocations()
         {
-            // main player can access chests in any location
-            if (Context.IsMainPlayer)
-                return CommonHelper.GetLocations();
-
-            // secondary player can only safely access chests in their current location
-            // (changes to other locations aren't synced to the other players)
-            return new[] { Game1.player.currentLocation };
+            return Context.IsMainPlayer
+                ? CommonHelper.GetLocations()
+                : this.Multiplayer.GetActiveLocations();
         }
 
         /// <summary>Get the underlying inventory for an <see cref="ItemGrabMenu.context"/> value.</summary>
@@ -301,6 +322,21 @@ namespace Pathoschild.Stardew.ChestsAnywhere
             }
 
             return location.Name;
+        }
+
+        /// <summary>Get whether it's safe to show a color picker for the given chest.</summary>
+        /// <param name="chest">The chest instance.</param>
+        /// <param name="location">The location containing the chest.</param>
+        /// <remarks>The game is hardcoded to exit the chest menu if this is enabled and the chest isn't present in the player's *current* location (see <see cref="ItemGrabMenu.update"/>), except if its tile location is (0, 0).</remarks>
+        private bool CanShowColorPicker(Chest chest, GameLocation location)
+        {
+            if (chest.TileLocation == Vector2.Zero)
+                return true;
+
+            return
+                object.ReferenceEquals(Game1.currentLocation, location)
+                && Game1.currentLocation.objects.TryGetValue(chest.TileLocation, out SObject obj)
+                && object.ReferenceEquals(obj, chest);
         }
     }
 }

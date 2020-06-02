@@ -1,8 +1,38 @@
 [← back to readme](README.md)
 
 # Release notes
-## Upcoming release
+## 1.19.3
+Released 14 May 2020.
+
+* Fixed error opening chests in a different location in 1.19.2.
+* Fixed color picker shown for non-chests like the fridge.
+
+## 1.19.2
+Released 14 May 2020.
+
+* Fixed chest color picker hidden unless you opened the chest directly.
+* Fixed being able to open the menu during the eat/drink animations and interrupting them.
+
+## 1.19.1
+Released 05 May 2020.
+
+* Moved `data.json` into standard `assets` folder.
+* Updated 'multiplayer limitations' message for 1.19.
+
+## 1.19
+Released 02 May 2020.
+
+* Farmhands in multiplayer can now access chests in all synced locations (including the farm, farmhouse, and constructed farm buildings).
+* The menu now defaults to chests in the current location, if any.
+* Updated Android support (thanks to ZaneYork!).
+* Improved translations. Thanks to D0n-A (updated Russian) and niniack (updated Chinese)!
+
+## 1.18
+Released 08 March 2020.
+
 * Added support for multi-key bindings (like `LeftShift + B`).
+* Fixed compatibility with recent Android versions (thanks to ZaneYork!).
+* Updated translations. Thanks to Annosz (added Hungarian) and Hesper (updated Korean)!
 
 ## 1.17.4
 Released 02 February 2020.

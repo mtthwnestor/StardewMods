@@ -22,9 +22,10 @@ namespace Pathoschild.Stardew.TractorMod.Framework.Attachments
         *********/
         /// <summary>Construct an instance.</summary>
         /// <param name="config">The attachment settings.</param>
+        /// <param name="modRegistry">Fetches metadata about loaded mods.</param>
         /// <param name="reflection">Simplifies access to private code.</param>
-        public FertilizerAttachment(GenericAttachmentConfig config, IReflectionHelper reflection)
-            : base(reflection)
+        public FertilizerAttachment(GenericAttachmentConfig config, IModRegistry modRegistry, IReflectionHelper reflection)
+            : base(modRegistry, reflection)
         {
             this.Config = config;
         }
@@ -66,11 +67,11 @@ namespace Pathoschild.Stardew.TractorMod.Framework.Attachments
                 // crop fertilizer
                 default:
                     // get unfertilised dirt
-                    if (!this.TryGetHoeDirt(tileFeature, tileObj, out HoeDirt dirt, out bool dirtCoveredByObj) || dirt.fertilizer.Value != HoeDirt.noFertilizer)
+                    if (!this.TryGetHoeDirt(tileFeature, tileObj, out HoeDirt dirt, out bool dirtCoveredByObj, out _) || dirt.fertilizer.Value != HoeDirt.noFertilizer)
                         return false;
 
                     // ignore if there's a giant crop, meteorite, etc covering the tile
-                    if (dirtCoveredByObj || this.GetResourceClumpCoveringTile(location, tile) != null)
+                    if (dirtCoveredByObj || this.HasResourceClumpCoveringTile(location, tile))
                         return false;
 
                     // apply fertilizer

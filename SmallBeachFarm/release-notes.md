@@ -1,10 +1,27 @@
 [← back to readme](README.md)
 
 # Release notes
-## Upcoming release
+## 1.7.1
+Released 05 May 2020.
+
+* Fixed error in upcoming versions of SMAPI.
+
+## 1.7
+Released 02 May 2020.
+
+* You can now catch both river and ocean fish where the river/ocean meet. The river is also wide enough there to catch high-quality river fish.
+* Migrated to tile flip/rotation added in SMAPI 3.4. This improves compatibility with recolors, since there are fewer custom tiles.
+* Fixed disabling the campfire not removing the driftwood pile next to it.
+* Fixed islands always added in 1.6.
+
+## 1.6
+Released 08 March 2020.
+
+* Added config option for the campfire.
 * Improved compatibility with Better Water (thanks to laulajatar!).
-* Removed files for Eemie's Map Recolor. (Compatibility is now handled by that mod directly.)
+* Improved compatibility with Eemie's Map Recolor (now handled by that mod directly).
 * Fixed issue where another mod's compatibility patch for Small Beach Farm wouldn't be applied correctly.
+* Internal changes (migrated to `.tmx` maps, campfire is no longer part of the map itself, islands are now a map patch).
 
 ## 1.5
 Released 01 February 2020.

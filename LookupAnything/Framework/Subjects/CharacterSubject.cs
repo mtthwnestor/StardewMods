@@ -168,7 +168,7 @@ namespace Pathoschild.Stardew.LookupAnything.Framework.Subjects
         {
             // birthday
             SDate birthday = SDate.Now().AddDays(-child.daysOld.Value);
-            yield return new GenericField(this.GameHelper, L10n.Npc.Birthday(), this.Text.Stringify(birthday, withYear: true));
+            yield return new GenericField(this.GameHelper, L10n.Npc.Birthday(), birthday.ToLocaleString(withYear: true));
 
             // age
             {
@@ -276,14 +276,12 @@ namespace Pathoschild.Stardew.LookupAnything.Framework.Subjects
         /// <param name="npc">The NPC for which to show info.</param>
         private IEnumerable<ICustomField> GetDataForVillager(NPC npc)
         {
-            if (!this.Constants.AsocialVillagers.Contains(npc.Name))
+            // social fields (birthday, friendship, gifting, etc)
+            if (this.GameHelper.IsSocialVillager(npc))
             {
                 // birthday
-                if (npc.Birthday_Season != null)
-                {
-                    SDate birthday = new SDate(npc.Birthday_Day, npc.Birthday_Season);
+                if (this.GameHelper.TryGetDate(npc.Birthday_Day, npc.Birthday_Season, out SDate birthday))
                     yield return new GenericField(this.GameHelper, L10n.Npc.Birthday(), this.Text.Stringify(birthday));
-                }
 
                 // friendship
                 if (Game1.player.friendshipData.ContainsKey(npc.Name))

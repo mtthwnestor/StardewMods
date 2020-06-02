@@ -24,9 +24,10 @@ namespace Pathoschild.Stardew.TractorMod.Framework.Attachments
         *********/
         /// <summary>Construct an instance.</summary>
         /// <param name="config">The attachment settings.</param>
+        /// <param name="modRegistry">Fetches metadata about loaded mods.</param>
         /// <param name="reflection">Simplifies access to private code.</param>
-        public WateringCanAttachment(GenericAttachmentConfig config, IReflectionHelper reflection)
-            : base(reflection)
+        public WateringCanAttachment(GenericAttachmentConfig config, IModRegistry modRegistry, IReflectionHelper reflection)
+            : base(modRegistry, reflection)
         {
             this.Config = config;
         }
@@ -51,7 +52,7 @@ namespace Pathoschild.Stardew.TractorMod.Framework.Attachments
         /// <param name="location">The current location.</param>
         public override bool Apply(Vector2 tile, SObject tileObj, TerrainFeature tileFeature, Farmer player, Tool tool, Item item, GameLocation location)
         {
-            if (!this.TryGetHoeDirt(tileFeature, tileObj, out HoeDirt dirt, out _) || dirt.state.Value == HoeDirt.watered)
+            if (!this.TryGetHoeDirt(tileFeature, tileObj, out HoeDirt dirt, out _, out _) || dirt.state.Value == HoeDirt.watered)
                 return false;
 
             WateringCan can = (WateringCan)tool;
